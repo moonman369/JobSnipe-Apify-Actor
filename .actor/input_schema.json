@@ -233,8 +233,7 @@
           "title": "LinkedIn session cookie",
           "description": "Optional: your LinkedIn cookies (exported via Cookie-Editor). Improves reliability for authenticated results.",
           "type": "string",
-          "editor": "textarea",
-          "isSecret": true
+          "editor": "textarea"
         },
         "userAgent": {
           "title": "User agent override",
@@ -246,8 +245,7 @@
           "title": "Proxy URL",
           "description": "Optional: custom proxy URL. Overrides the actor's default proxy. Recommended: residential proxy for reliability.",
           "type": "string",
-          "editor": "textfield",
-          "isSecret": true
+          "editor": "textfield"
         }
       }
     }
