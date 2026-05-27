@@ -1,0 +1,245 @@
+{
+  "title": "Job Union Scraper Input",
+  "description": "Unified input schema that drives both the Google Jobs Scraper (johnvc/Google-Jobs-Scraper) and the LinkedIn Job Search actor (harvestapi/linkedin-job-search). Fields are grouped by scope: orchestration, shared search, Google-specific, and LinkedIn-specific.",
+  "type": "object",
+  "schemaVersion": 1,
+
+  "properties": {
+
+    "sources": {
+      "title": "Sources to scrape",
+      "description": "Which job platforms to query. Selecting both runs them in parallel.",
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["google", "linkedin"],
+        "enumTitles": ["Google Jobs", "LinkedIn Jobs"]
+      },
+      "default": ["google", "linkedin"],
+      "editor": "checkboxes"
+    },
+
+    "deduplicateResults": {
+      "title": "Deduplicate results",
+      "description": "When true, jobs that appear in both sources (matched by title + company + location) are merged into a single record carrying data from both sources.",
+      "type": "boolean",
+      "default": true
+    },
+
+    "outputNormalised": {
+      "title": "Output normalised schema",
+      "description": "When true, every job is emitted using the common normalised schema regardless of source. When false, the raw source payload is preserved alongside the _source and _normalisedAt fields.",
+      "type": "boolean",
+      "default": true
+    },
+
+    "query": {
+      "title": "Job search query",
+      "description": "Primary search query sent to BOTH Google Jobs and LinkedIn (as the first / only jobTitle). Examples: 'Software Engineer', 'Data Scientist', 'Product Manager'.",
+      "type": "string",
+      "editor": "textfield",
+      "prefill": "Software Engineer"
+    },
+
+    "location": {
+      "title": "Job location",
+      "description": "Primary location sent to BOTH sources. Recommended to specify at city level for best results. For LinkedIn, this becomes the first entry in the locations list.",
+      "type": "string",
+      "editor": "textfield",
+      "prefill": "New York, NY"
+    },
+
+    "googleConfig": {
+      "title": "Google Jobs configuration",
+      "description": "All settings specific to the Google Jobs Scraper (johnvc/Google-Jobs-Scraper). These are ignored when Google is not in 'sources'.",
+      "type": "object",
+      "editor": "json",
+      "properties": {
+        "country": {
+          "title": "Country code (ISO 3166-1 alpha-2)",
+          "description": "E.g. 'us', 'uk', 'de'. Leave empty (None) to let Google infer from domain.",
+          "type": "string",
+          "default": "None",
+          "enum": ["None","us","ca","uk","de","fr","au","jp","in","br","mx"]
+        },
+        "language": {
+          "title": "Language code",
+          "description": "Language for Google results. Defaults to 'None' (Google infers).",
+          "type": "string",
+          "default": "None"
+        },
+        "google_domain": {
+          "title": "Google domain",
+          "description": "Which regional Google domain to query. Defaults to google.com.",
+          "type": "string",
+          "default": "google.com"
+        },
+        "num_results": {
+          "title": "Maximum number of results",
+          "description": "Maximum Google job records to return. Defaults to 100.",
+          "type": "integer",
+          "default": 100
+        },
+        "max_pagination": {
+          "title": "Maximum pages",
+          "description": "Maximum pages to paginate (~10 results each). Set to 0 for unlimited.",
+          "type": "integer",
+          "default": 0
+        },
+        "include_lrad": {
+          "title": "Include location radius filter",
+          "description": "Enable radius-based location filtering.",
+          "type": "boolean",
+          "default": false
+        },
+        "lrad_value": {
+          "title": "Location radius (km)",
+          "description": "Radius in km when include_lrad is true. E.g. '5', '10', '25'.",
+          "type": "string",
+          "prefill": "10"
+        },
+        "max_delay": {
+          "title": "Request delay (seconds)",
+          "description": "Pause between Google API requests to avoid rate limiting.",
+          "type": "integer",
+          "default": 1
+        }
+      }
+    },
+
+    "linkedInConfig": {
+      "title": "LinkedIn Jobs configuration",
+      "description": "All settings specific to the LinkedIn Job Search actor (harvestapi/linkedin-job-search). These are ignored when LinkedIn is not in 'sources'.",
+      "type": "object",
+      "editor": "json",
+      "properties": {
+        "extraJobTitles": {
+          "title": "Additional job title queries",
+          "description": "Extra search queries run on LinkedIn on top of the shared 'query' field. Supports LinkedIn boolean operators (AND, OR, NOT).",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "extraLocations": {
+          "title": "Additional locations",
+          "description": "Extra LinkedIn location strings appended to the shared 'location'. LinkedIn uses its own autocomplete — use full names like 'United Kingdom' rather than 'UK'.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "maxItemsPerQuery": {
+          "title": "Max jobs per query × location combination",
+          "description": "LinkedIn scraper runs once per (jobTitle × location) pair; this caps how many jobs each pair returns.",
+          "type": "integer",
+          "default": 25
+        },
+        "company": {
+          "title": "Company filter",
+          "description": "Filter to specific companies. Accepts LinkedIn company page URLs or plain company names.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "workplaceType": {
+          "title": "Workplace type",
+          "description": "Filter by one or more workplace types.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["remote", "hybrid", "office"],
+            "enumTitles": ["Remote", "Hybrid", "On-site"]
+          }
+        },
+        "employmentType": {
+          "title": "Employment type",
+          "description": "Filter by one or more employment types.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["full-time", "part-time", "contract", "internship", "temporary"]
+          }
+        },
+        "experienceLevel": {
+          "title": "Experience level",
+          "description": "Filter by one or more experience levels.",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["internship", "entry", "associate", "mid-senior", "director", "executive"]
+          }
+        },
+        "salary": {
+          "title": "Salary filter",
+          "description": "Filter by salary ranges (LinkedIn predefined brackets).",
+          "type": "array",
+          "items": {
+            "type": "string",
+            "enum": ["40k+", "60k+", "80k+", "100k+", "120k+", "140k+", "160k+", "180k+", "200k+"]
+          }
+        },
+        "under10Applicants": {
+          "title": "Under 10 applicants",
+          "description": "Only return jobs with fewer than 10 applicants.",
+          "type": "boolean",
+          "default": false
+        },
+        "easyApply": {
+          "title": "LinkedIn Easy Apply only",
+          "description": "Only return jobs with the LinkedIn Easy Apply option.",
+          "type": "boolean",
+          "default": false
+        },
+        "postedLimit": {
+          "title": "Posted within",
+          "description": "Filter to jobs posted in the last 1 hour, 24 hours, week, or month.",
+          "type": "string",
+          "enum": ["1h", "24h", "week", "month"]
+        },
+        "sortBy": {
+          "title": "Sort results by",
+          "description": "Sort LinkedIn results by relevance or date.",
+          "type": "string",
+          "enum": ["date", "relevance"],
+          "default": "relevance"
+        },
+        "industryIds": {
+          "title": "Industry IDs",
+          "description": "LinkedIn industry IDs to filter by. Full list: https://github.com/HarvestAPI/linkedin-industry-codes-v2",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "geoIds": {
+          "title": "Geo IDs",
+          "description": "LinkedIn geo IDs for precise region targeting. E.g. 103644278 for USA.",
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "startPage": {
+          "title": "Start page",
+          "description": "Page number to start scraping from. Each page has 25 results.",
+          "type": "integer",
+          "default": 1
+        },
+        "cookie": {
+          "title": "LinkedIn session cookie",
+          "description": "Optional: your LinkedIn cookies (exported via Cookie-Editor). Improves reliability for authenticated results.",
+          "type": "string",
+          "editor": "textarea",
+          "isSecret": true
+        },
+        "userAgent": {
+          "title": "User agent override",
+          "description": "Optional: custom User-Agent string. Copy from https://www.whatismybrowser.com/detect/what-is-my-user-agent/",
+          "type": "string",
+          "editor": "textfield"
+        },
+        "proxy": {
+          "title": "Proxy URL",
+          "description": "Optional: custom proxy URL. Overrides the actor's default proxy. Recommended: residential proxy for reliability.",
+          "type": "string",
+          "editor": "textfield",
+          "isSecret": true
+        }
+      }
+    }
+  },
+
+  "required": ["query"]
+}

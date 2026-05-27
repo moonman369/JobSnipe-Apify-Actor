@@ -1,0 +1,22 @@
+{
+  "name": "job-union-scraper",
+  "version": "1.0.0",
+  "description": "Apify Actor that runs Google Jobs Scraper and LinkedIn Job Search in parallel, normalises their outputs to a common schema, and returns the deduplicated union.",
+  "type": "module",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "node src/main.js",
+    "lint": "eslint src/"
+  },
+  "dependencies": {
+    "apify": "^3.2.2"
+  },
+  "devDependencies": {
+    "eslint": "^9.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "author": "",
+  "license": "Apache-2.0"
+}

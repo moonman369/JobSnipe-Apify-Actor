@@ -1,0 +1,12 @@
+{
+  "actorSpecification": 1,
+  "name": "job-union-scraper",
+  "title": "Job Union Scraper (Google + LinkedIn)",
+  "description": "Runs Google Jobs Scraper and LinkedIn Job Search in parallel, then returns the deduplicated union of all results in a normalised schema.",
+  "version": "1.0",
+  "meta": {
+    "templateId": "js-start"
+  },
+  "input": "./input_schema.json",
+  "dockerfile": "../Dockerfile"
+}
