@@ -16,7 +16,7 @@
         "enumTitles": ["Google Jobs", "LinkedIn Jobs"]
       },
       "default": ["google", "linkedin"],
-      "editor": "checkboxes"
+      "editor": "select"
     },
 
     "deduplicateResults": {
@@ -37,7 +37,6 @@
       "title": "Job search query",
       "description": "Primary search query sent to BOTH Google Jobs and LinkedIn (as the first / only jobTitle). Examples: 'Software Engineer', 'Data Scientist', 'Product Manager'.",
       "type": "string",
-      "editor": "textfield",
       "prefill": "Software Engineer"
     },
 
@@ -45,7 +44,6 @@
       "title": "Job location",
       "description": "Primary location sent to BOTH sources. Recommended to specify at city level for best results. For LinkedIn, this becomes the first entry in the locations list.",
       "type": "string",
-      "editor": "textfield",
       "prefill": "New York, NY"
     },
 
@@ -221,20 +219,17 @@
           "title": "LinkedIn session cookie",
           "description": "Optional: your LinkedIn cookies (exported via Cookie-Editor). Improves reliability for authenticated results.",
           "type": "string",
-          "editor": "textarea",
           "isSecret": true
         },
         "userAgent": {
           "title": "User agent override",
           "description": "Optional: custom User-Agent string. Copy from https://www.whatismybrowser.com/detect/what-is-my-user-agent/",
-          "type": "string",
-          "editor": "textfield"
+          "type": "string"
         },
         "proxy": {
           "title": "Proxy URL",
           "description": "Optional: custom proxy URL. Overrides the actor's default proxy. Recommended: residential proxy for reliability.",
           "type": "string",
-          "editor": "textfield",
           "isSecret": true
         }
       }
