@@ -53,12 +53,13 @@
       "title": "Google Jobs configuration",
       "description": "All settings specific to the Google Jobs Scraper (johnvc/Google-Jobs-Scraper). These are ignored when Google is not in 'sources'.",
       "type": "object",
-      "editor": "json",
+      "editor": "schemaBased",
       "properties": {
         "country": {
           "title": "Country code (ISO 3166-1 alpha-2)",
           "description": "E.g. 'us', 'uk', 'de'. Leave empty (None) to let Google infer from domain.",
           "type": "string",
+          "editor": "select",
           "default": "None",
           "enum": ["None","us","ca","uk","de","fr","au","jp","in","br","mx"]
         },
@@ -111,18 +112,20 @@
       "title": "LinkedIn Jobs configuration",
       "description": "All settings specific to the LinkedIn Job Search actor (harvestapi/linkedin-job-search). These are ignored when LinkedIn is not in 'sources'.",
       "type": "object",
-      "editor": "json",
+      "editor": "schemaBased",
       "properties": {
         "extraJobTitles": {
           "title": "Additional job title queries",
           "description": "Extra search queries run on LinkedIn on top of the shared 'query' field. Supports LinkedIn boolean operators (AND, OR, NOT).",
           "type": "array",
+          "editor": "stringList",
           "items": { "type": "string" }
         },
         "extraLocations": {
           "title": "Additional locations",
           "description": "Extra LinkedIn location strings appended to the shared 'location'. LinkedIn uses its own autocomplete — use full names like 'United Kingdom' rather than 'UK'.",
           "type": "array",
+          "editor": "stringList",
           "items": { "type": "string" }
         },
         "maxItemsPerQuery": {
@@ -135,12 +138,14 @@
           "title": "Company filter",
           "description": "Filter to specific companies. Accepts LinkedIn company page URLs or plain company names.",
           "type": "array",
+          "editor": "stringList",
           "items": { "type": "string" }
         },
         "workplaceType": {
           "title": "Workplace type",
           "description": "Filter by one or more workplace types.",
           "type": "array",
+          "editor": "select",
           "items": {
             "type": "string",
             "enum": ["remote", "hybrid", "office"],
@@ -151,6 +156,7 @@
           "title": "Employment type",
           "description": "Filter by one or more employment types.",
           "type": "array",
+          "editor": "select",
           "items": {
             "type": "string",
             "enum": ["full-time", "part-time", "contract", "internship", "temporary"]
@@ -160,6 +166,7 @@
           "title": "Experience level",
           "description": "Filter by one or more experience levels.",
           "type": "array",
+          "editor": "select",
           "items": {
             "type": "string",
             "enum": ["internship", "entry", "associate", "mid-senior", "director", "executive"]
@@ -169,6 +176,7 @@
           "title": "Salary filter",
           "description": "Filter by salary ranges (LinkedIn predefined brackets).",
           "type": "array",
+          "editor": "select",
           "items": {
             "type": "string",
             "enum": ["40k+", "60k+", "80k+", "100k+", "120k+", "140k+", "160k+", "180k+", "200k+"]
@@ -190,12 +198,14 @@
           "title": "Posted within",
           "description": "Filter to jobs posted in the last 1 hour, 24 hours, week, or month.",
           "type": "string",
+          "editor": "select",
           "enum": ["1h", "24h", "week", "month"]
         },
         "sortBy": {
           "title": "Sort results by",
           "description": "Sort LinkedIn results by relevance or date.",
           "type": "string",
+          "editor": "select",
           "enum": ["date", "relevance"],
           "default": "relevance"
         },
@@ -203,12 +213,14 @@
           "title": "Industry IDs",
           "description": "LinkedIn industry IDs to filter by. Full list: https://github.com/HarvestAPI/linkedin-industry-codes-v2",
           "type": "array",
+          "editor": "stringList",
           "items": { "type": "string" }
         },
         "geoIds": {
           "title": "Geo IDs",
           "description": "LinkedIn geo IDs for precise region targeting. E.g. 103644278 for USA.",
           "type": "array",
+          "editor": "stringList",
           "items": { "type": "string" }
         },
         "startPage": {
