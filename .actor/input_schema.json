@@ -33,6 +33,14 @@
       "default": true
     },
 
+    "apifyApiToken": {
+      "title": "Apify API token (optional)",
+      "description": "Optional personal Apify API token used when calling child actors. Use this if the default run token lacks permissions.",
+      "type": "string",
+      "editor": "textarea",
+      "isSecret": true
+    },
+
     "query": {
       "title": "Job search query",
       "description": "Primary search query sent to BOTH Google Jobs and LinkedIn (as the first / only jobTitle). Examples: 'Software Engineer', 'Data Scientist', 'Product Manager'.",

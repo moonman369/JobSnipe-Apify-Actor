@@ -7,9 +7,10 @@ import { Actor, log } from 'apify';
  * @param {string} params.query      - Main search query (shared input)
  * @param {string} params.location   - Location string (shared input)
  * @param {object} params.config     - googleConfig block from unified input
+ * @param {string} [params.token]    - Optional Apify API token for child actor call
  * @returns {Promise<object[]>}
  */
-export async function runGoogleJobsScraper({ query, location, config }) {
+export async function runGoogleJobsScraper({ query, location, config, token }) {
     const {
         country = 'None',
         language = 'None',
@@ -42,7 +43,7 @@ export async function runGoogleJobsScraper({ query, location, config }) {
 
     let run;
     try {
-        run = await Actor.call('johnvc/Google-Jobs-Scraper', actorInput);
+        run = await Actor.call('johnvc/Google-Jobs-Scraper', actorInput, token ? { token } : {});
     } catch (err) {
         log.error('Google Jobs Scraper run failed', { error: err.message });
         return [];

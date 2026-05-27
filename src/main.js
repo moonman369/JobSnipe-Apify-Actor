@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import { Actor, log } from 'apify';
 import { runGoogleJobsScraper } from './googleRunner.js';
 import { runLinkedInJobsScraper } from './linkedinRunner.js';
@@ -13,11 +14,14 @@ const {
     sources = ['google', 'linkedin'],
     deduplicateResults = true,
     outputNormalised = true,
+    apifyApiToken = '',
     query,
     location = '',
     googleConfig = {},
     linkedInConfig = {},
 } = input ?? {};
+
+const childActorToken = apifyApiToken || process.env.APIFY_CHILD_TOKEN || process.env.APIFY_TOKEN || '';
 
 if (!query) {
     throw new Error('Input field "query" is required.');
@@ -34,7 +38,7 @@ const promises = [];
 if (useGoogle) {
     log.info('Launching Google Jobs Scraper…');
     promises.push(
-        runGoogleJobsScraper({ query, location, config: googleConfig })
+        runGoogleJobsScraper({ query, location, config: googleConfig, token: childActorToken })
             .then((items) => {
                 log.info(`Google Jobs returned ${items.length} raw items.`);
                 return items.map((item) => normaliseGoogle(item, outputNormalised));
@@ -47,7 +51,7 @@ if (useGoogle) {
 if (useLinkedIn) {
     log.info('Launching LinkedIn Job Search…');
     promises.push(
-        runLinkedInJobsScraper({ query, location, config: linkedInConfig })
+        runLinkedInJobsScraper({ query, location, config: linkedInConfig, token: childActorToken })
             .then((items) => {
                 log.info(`LinkedIn returned ${items.length} raw items.`);
                 return items.map((item) => normaliseLinkedIn(item, outputNormalised));

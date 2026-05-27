@@ -7,9 +7,10 @@ import { Actor, log } from 'apify';
  * @param {string} params.query      - Main search query → first jobTitle
  * @param {string} params.location   - Primary location string
  * @param {object} params.config     - linkedInConfig block from unified input
+ * @param {string} [params.token]    - Optional Apify API token for child actor call
  * @returns {Promise<object[]>}
  */
-export async function runLinkedInJobsScraper({ query, location, config }) {
+export async function runLinkedInJobsScraper({ query, location, config, token }) {
     const {
         extraJobTitles = [],
         extraLocations = [],
@@ -63,7 +64,7 @@ export async function runLinkedInJobsScraper({ query, location, config }) {
 
     let run;
     try {
-        run = await Actor.call('harvestapi/linkedin-job-search', actorInput);
+        run = await Actor.call('harvestapi/linkedin-job-search', actorInput, token ? { token } : {});
     } catch (err) {
         log.error('LinkedIn Job Search run failed', { error: err.message });
         return [];

@@ -9,7 +9,8 @@
     "lint": "eslint src/"
   },
   "dependencies": {
-    "apify": "^3.2.2"
+    "apify": "^3.2.2",
+    "dotenv": "^16.6.1"
   },
   "devDependencies": {
     "eslint": "^9.0.0"
