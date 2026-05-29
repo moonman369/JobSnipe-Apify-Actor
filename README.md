@@ -1,6 +1,6 @@
 # Job Union Scraper
 
-An Apify Actor that runs **Google Jobs Scraper** (`johnvc/Google-Jobs-Scraper`) and **LinkedIn Job Search** (`harvestapi/linkedin-job-search`) **in parallel**, normalises their outputs into a single common schema, deduplicates overlapping listings, and returns the combined results to the caller.
+An Apify Actor that runs **Google Jobs Scraper** (`johnvc/Google-Jobs-Scraper`) and **LinkedIn Jobs Scraper** (`jungle_thunder/linkedin-jobs-scraper-free-trial`) **in parallel**, normalises their outputs into a single common schema, deduplicates overlapping listings, and returns the combined results to the caller.
 
 ---
 
@@ -13,7 +13,7 @@ Actor.call(this actor)
          │                                        │
          │                               normaliseGoogle()
          │                                        │
-         └─── runLinkedInJobsScraper() ──► harvestapi/linkedin-job-search
+         └─── runLinkedInJobsScraper() ──► jungle_thunder/linkedin-jobs-scraper-free-trial
                                                   │
                                          normaliseLinkedIn()
                                                   │
@@ -41,25 +41,25 @@ Every job record in the dataset conforms to the following shape:
 | `location` | string | Job location |
 | `country` | string\|null | Country code or name |
 | `description` | string\|null | Plain-text job description |
-| `descriptionHtml` | string\|null | HTML job description (LinkedIn only) |
+| `descriptionHtml` | string\|null | HTML job description |
 | `highlights.qualifications` | string[] | Qualification bullet points (Google) |
 | `highlights.responsibilities` | string[] | Responsibility bullet points (Google) |
-| `highlights.benefits` | string[] | Benefit bullet points (Google) |
+| `highlights.benefits` | string[] | Benefits (Google highlights / LinkedIn benefits field) |
 | `employmentType` | string\|null | e.g. "Full-time", "Contract" |
-| `workplaceType` | string\|null | "Remote", "Hybrid", "On-site" (LinkedIn) |
-| `experienceLevel` | string\|null | e.g. "Mid-Senior level" (LinkedIn) |
+| `workplaceType` | string\|null | "Remote", "Hybrid", "On-site" |
+| `experienceLevel` | string\|null | e.g. "Mid-Senior", "Entry" |
 | `salary` | string\|null | Salary info where available |
-| `postedAt` | string\|null | Posting date (ISO-8601 or raw string) |
+| `postedAt` | string\|null | Posting date |
 | `applyUrl` | string\|null | Primary apply URL |
 | `applyUrls` | string[] | All collected apply URLs |
-| `linkedInApplyUrl` | string\|null | Direct LinkedIn apply URL |
+| `linkedInApplyUrl` | string\|null | Direct LinkedIn job URL |
 | `easyApply` | boolean | LinkedIn Easy Apply flag |
-| `companyUrl` | string\|null | Company page URL |
+| `companyUrl` | string\|null | Company LinkedIn page URL |
 | `companyLogoUrl` | string\|null | Company logo URL |
-| `companySize` | string\|null | Employee count (LinkedIn) |
-| `companyIndustry` | string\|null | Company industry (LinkedIn) |
+| `companySize` | string\|null | Employee count |
+| `companyIndustry` | string\|null | Company industry |
 | `applicantCount` | number\|null | Number of applicants |
-| `viewCount` | number\|null | View count (LinkedIn) |
+| `viewCount` | number\|null | View count |
 | `jobId` | string\|null | Source-native job ID |
 | `_source` | `"google"` \| `"linkedin"` \| `"both"` | Which source(s) provided this record |
 | `_sources` | string[] | Array of source names |
@@ -81,6 +81,7 @@ When `outputNormalised` is `false`, the original raw payload is preserved in a `
 | `sources` | string[] | `["google","linkedin"]` | Which sources to query. |
 | `deduplicateResults` | boolean | `true` | Merge records that match on title+company+location. |
 | `outputNormalised` | boolean | `true` | Emit the normalised schema; set to `false` to also get raw payloads. |
+| `apifyApiToken` | string | — | Optional personal Apify API token for calling child actors (secret). |
 
 ### `googleConfig` object
 
@@ -95,28 +96,19 @@ When `outputNormalised` is `false`, the original raw payload is preserved in a `
 | `lrad_value` | string | `"10"` | Radius in km when `include_lrad` is `true`. |
 | `max_delay` | integer | `1` | Seconds between requests. |
 
-### `linkedInConfig` object
+### `linkedInConfig` object — `jungle_thunder/linkedin-jobs-scraper-free-trial`
 
 | Field | Type | Default | Description |
 |---|---|---|---|
-| `extraJobTitles` | string[] | `[]` | Additional LinkedIn search queries (boolean operators supported). |
-| `extraLocations` | string[] | `[]` | Additional LinkedIn locations. |
-| `maxItemsPerQuery` | integer | `25` | Max jobs per title×location pair. |
-| `company` | string[] | — | Company page URLs or names. |
-| `workplaceType` | string[] | — | `remote`, `hybrid`, `office`. |
-| `employmentType` | string[] | — | `full-time`, `part-time`, `contract`, `internship`, `temporary`. |
-| `experienceLevel` | string[] | — | `internship`, `entry`, `associate`, `mid-senior`, `director`, `executive`. |
-| `salary` | string[] | — | LinkedIn salary brackets (`40k+` … `200k+`). |
-| `under10Applicants` | boolean | `false` | Only jobs with <10 applicants. |
-| `easyApply` | boolean | `false` | Only Easy Apply jobs. |
-| `postedLimit` | string | — | `1h`, `24h`, `week`, `month`. |
-| `sortBy` | string | `"relevance"` | `date` or `relevance`. |
-| `industryIds` | string[] | — | LinkedIn industry IDs. |
-| `geoIds` | string[] | — | LinkedIn geo IDs. |
-| `startPage` | integer | `1` | Start page for pagination. |
-| `cookie` | string | — | LinkedIn session cookies (secret). |
-| `userAgent` | string | — | Custom User-Agent. |
-| `proxy` | string | — | Custom proxy URL (secret). |
+| `totalJobs` | integer | `50` | Jobs to scrape. Free trial cap: 50; paid: up to 1000. |
+| `experienceLevel` | string[] | `[]` | `"Internship"`, `"Entry"`, `"Associate"`, `"Mid-Senior"`, `"Director"`, `"Executive"`. |
+| `jobType` | string[] | `[]` | `"Full-time"`, `"Part-time"`, `"Contract"`, `"Temporary"`, `"Volunteer"`, `"Internship"`. |
+| `remoteFilter` | string[] | `[]` | `"On-site"`, `"Remote"`, `"Hybrid"`. |
+| `timePosted` | string | `"any"` | `"any"`, `"past-24h"`, `"past-week"`, `"past-month"`. |
+| `companyIds` | string[] | `[]` | LinkedIn numeric company IDs to restrict results to. |
+| `includeDescription` | boolean | `true` | Fetch full job descriptions (slightly slower). |
+| `startOffset` | integer | `0` | Skip first N results (pagination / resume). |
+| `maxConcurrency` | integer | `5` | Parallel requests. 5 = stable, 10 = fast. |
 
 ---
 
@@ -135,12 +127,13 @@ When `outputNormalised` is `false`, the original raw payload is preserved in a `
     "num_results": 50
   },
   "linkedInConfig": {
-    "maxItemsPerQuery": 50,
-    "workplaceType": ["remote", "hybrid"],
-    "employmentType": ["full-time"],
-    "experienceLevel": ["mid-senior", "director"],
-    "postedLimit": "week",
-    "sortBy": "date"
+    "totalJobs": 100,
+    "remoteFilter": ["Remote", "Hybrid"],
+    "jobType": ["Full-time"],
+    "experienceLevel": ["Mid-Senior", "Director"],
+    "timePosted": "past-week",
+    "includeDescription": true,
+    "maxConcurrency": 10
   }
 }
 ```
@@ -157,7 +150,7 @@ job-union-actor/
 ├── src/
 │   ├── main.js             # Entry point — orchestrates everything
 │   ├── googleRunner.js     # Calls johnvc/Google-Jobs-Scraper
-│   ├── linkedinRunner.js   # Calls harvestapi/linkedin-job-search
+│   ├── linkedinRunner.js   # Calls jungle_thunder/linkedin-jobs-scraper-free-trial
 │   ├── normalise.js        # Normalises raw payloads to common schema
 │   └── dedup.js            # Deduplication & merging logic
 ├── Dockerfile
@@ -179,8 +172,9 @@ Claude can call this Actor via the Apify MCP server using the `Apify:call-actor`
     "location": "Berlin, Germany",
     "sources": ["google", "linkedin"],
     "linkedInConfig": {
-      "workplaceType": ["hybrid"],
-      "postedLimit": "week"
+      "remoteFilter": ["Hybrid"],
+      "timePosted": "past-week",
+      "totalJobs": 50
     }
   }
 }

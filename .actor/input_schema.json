@@ -1,6 +1,6 @@
 {
   "title": "Job Union Scraper Input",
-  "description": "Unified input schema that drives both the Google Jobs Scraper (johnvc/Google-Jobs-Scraper) and the LinkedIn Job Search actor (harvestapi/linkedin-job-search). Fields are grouped by scope: orchestration, shared search, Google-specific, and LinkedIn-specific.",
+  "description": "Unified input schema that drives both the Google Jobs Scraper (johnvc/Google-Jobs-Scraper) and the LinkedIn Jobs Scraper (jungle_thunder/linkedin-jobs-scraper-free-trial). Fields are grouped by scope: orchestration, shared search, Google-specific, and LinkedIn-specific.",
   "type": "object",
   "schemaVersion": 1,
 
@@ -118,142 +118,83 @@
 
     "linkedInConfig": {
       "title": "LinkedIn Jobs configuration",
-      "description": "All settings specific to the LinkedIn Job Search actor (harvestapi/linkedin-job-search). These are ignored when LinkedIn is not in 'sources'.",
+      "description": "All settings specific to the LinkedIn Jobs Scraper (jungle_thunder/linkedin-jobs-scraper-free-trial). These are ignored when LinkedIn is not in 'sources'. Free trial: 50 jobs; paid plan: up to 1000 per run.",
       "type": "object",
       "editor": "schemaBased",
       "properties": {
-        "extraJobTitles": {
-          "title": "Additional job title queries",
-          "description": "Extra search queries run on LinkedIn on top of the shared 'query' field. Supports LinkedIn boolean operators (AND, OR, NOT).",
-          "type": "array",
-          "editor": "stringList",
-          "items": { "type": "string" }
-        },
-        "extraLocations": {
-          "title": "Additional locations",
-          "description": "Extra LinkedIn location strings appended to the shared 'location'. LinkedIn uses its own autocomplete — use full names like 'United Kingdom' rather than 'UK'.",
-          "type": "array",
-          "editor": "stringList",
-          "items": { "type": "string" }
-        },
-        "maxItemsPerQuery": {
-          "title": "Max jobs per query × location combination",
-          "description": "LinkedIn scraper runs once per (jobTitle × location) pair; this caps how many jobs each pair returns.",
+        "totalJobs": {
+          "title": "Number of jobs to scrape",
+          "description": "How many LinkedIn jobs to fetch. Free trial cap: 50. Paid plan: up to 1000 per run.",
           "type": "integer",
-          "default": 25
-        },
-        "company": {
-          "title": "Company filter",
-          "description": "Filter to specific companies. Accepts LinkedIn company page URLs or plain company names.",
-          "type": "array",
-          "editor": "stringList",
-          "items": { "type": "string" }
-        },
-        "workplaceType": {
-          "title": "Workplace type",
-          "description": "Filter by one or more workplace types.",
-          "type": "array",
-          "editor": "select",
-          "items": {
-            "type": "string",
-            "enum": ["remote", "hybrid", "office"],
-            "enumTitles": ["Remote", "Hybrid", "On-site"]
-          }
-        },
-        "employmentType": {
-          "title": "Employment type",
-          "description": "Filter by one or more employment types.",
-          "type": "array",
-          "editor": "select",
-          "items": {
-            "type": "string",
-            "enum": ["full-time", "part-time", "contract", "internship", "temporary"]
-          }
+          "default": 50
         },
         "experienceLevel": {
           "title": "Experience level",
-          "description": "Filter by one or more experience levels.",
+          "description": "Filter by one or more seniority levels. Leave empty to include all levels.",
           "type": "array",
           "editor": "select",
+          "default": [],
           "items": {
             "type": "string",
-            "enum": ["internship", "entry", "associate", "mid-senior", "director", "executive"]
+            "enum": ["Internship", "Entry", "Associate", "Mid-Senior", "Director", "Executive"]
           }
         },
-        "salary": {
-          "title": "Salary filter",
-          "description": "Filter by salary ranges (LinkedIn predefined brackets).",
+        "jobType": {
+          "title": "Employment type",
+          "description": "Filter by one or more job types. Leave empty to include all types.",
           "type": "array",
           "editor": "select",
+          "default": [],
           "items": {
             "type": "string",
-            "enum": ["40k+", "60k+", "80k+", "100k+", "120k+", "140k+", "160k+", "180k+", "200k+"]
+            "enum": ["Full-time", "Part-time", "Contract", "Temporary", "Volunteer", "Internship"]
           }
         },
-        "under10Applicants": {
-          "title": "Under 10 applicants",
-          "description": "Only return jobs with fewer than 10 applicants.",
-          "type": "boolean",
-          "default": false
+        "remoteFilter": {
+          "title": "Remote / On-site / Hybrid",
+          "description": "Filter by work arrangement. Leave empty to include all arrangements.",
+          "type": "array",
+          "editor": "select",
+          "default": [],
+          "items": {
+            "type": "string",
+            "enum": ["On-site", "Remote", "Hybrid"]
+          }
         },
-        "easyApply": {
-          "title": "LinkedIn Easy Apply only",
-          "description": "Only return jobs with the LinkedIn Easy Apply option.",
-          "type": "boolean",
-          "default": false
-        },
-        "postedLimit": {
-          "title": "Posted within",
-          "description": "Filter to jobs posted in the last 1 hour, 24 hours, week, or month.",
+        "timePosted": {
+          "title": "Date posted",
+          "description": "Only return jobs posted within this window.",
           "type": "string",
           "editor": "select",
-          "enum": ["1h", "24h", "week", "month"]
+          "default": "any",
+          "enum": ["any", "past-24h", "past-week", "past-month"],
+          "enumTitles": ["Any time", "Past 24 hours", "Past week", "Past month"]
         },
-        "sortBy": {
-          "title": "Sort results by",
-          "description": "Sort LinkedIn results by relevance or date.",
-          "type": "string",
-          "editor": "select",
-          "enum": ["date", "relevance"],
-          "default": "relevance"
-        },
-        "industryIds": {
-          "title": "Industry IDs",
-          "description": "LinkedIn industry IDs to filter by. Full list: https://github.com/HarvestAPI/linkedin-industry-codes-v2",
+        "companyIds": {
+          "title": "Company IDs (optional)",
+          "description": "Restrict results to specific companies by their LinkedIn company IDs (numeric). Leave empty to search all companies.",
           "type": "array",
           "editor": "stringList",
+          "default": [],
           "items": { "type": "string" }
         },
-        "geoIds": {
-          "title": "Geo IDs",
-          "description": "LinkedIn geo IDs for precise region targeting. E.g. 103644278 for USA.",
-          "type": "array",
-          "editor": "stringList",
-          "items": { "type": "string" }
+        "includeDescription": {
+          "title": "Include full job descriptions",
+          "description": "Fetch the complete job description for every listing. Slightly slower but returns full requirements and responsibilities text.",
+          "type": "boolean",
+          "default": true
         },
-        "startPage": {
-          "title": "Start page",
-          "description": "Page number to start scraping from. Each page has 25 results.",
+        "startOffset": {
+          "title": "Start offset (skip N jobs)",
+          "description": "Skip the first N results. Useful for pagination or resuming an interrupted scrape.",
           "type": "integer",
-          "default": 1
+          "default": 0
         },
-        "cookie": {
-          "title": "LinkedIn session cookie",
-          "description": "Optional: your LinkedIn cookies (exported via Cookie-Editor). Improves reliability for authenticated results.",
-          "type": "string",
-          "editor": "textarea"
-        },
-        "userAgent": {
-          "title": "User agent override",
-          "description": "Optional: custom User-Agent string. Copy from https://www.whatismybrowser.com/detect/what-is-my-user-agent/",
-          "type": "string",
-          "editor": "textfield"
-        },
-        "proxy": {
-          "title": "Proxy URL",
-          "description": "Optional: custom proxy URL. Overrides the actor's default proxy. Recommended: residential proxy for reliability.",
-          "type": "string",
-          "editor": "textfield"
+        "maxConcurrency": {
+          "title": "Concurrency (speed)",
+          "description": "Number of parallel requests. Higher values are faster but may be less stable. Recommended: 5 for stability, 10 for speed.",
+          "type": "integer",
+          "default": 5
         }
       }
     }

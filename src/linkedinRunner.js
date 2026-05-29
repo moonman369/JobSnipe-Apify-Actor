@@ -1,77 +1,63 @@
 import { Actor, log } from 'apify';
 
 /**
- * Calls harvestapi/linkedin-job-search and returns its dataset items.
+ * Calls jungle_thunder/linkedin-jobs-scraper-free-trial and returns its dataset items.
+ *
+ * Actor page: https://console.apify.com/actors/IVlKNE78L4uOQFvAZ
  *
  * @param {object} params
- * @param {string} params.query      - Main search query → first jobTitle
- * @param {string} params.location   - Primary location string
+ * @param {string} params.query      - Main search query → searchKeywords
+ * @param {string} params.location   - Location string
  * @param {object} params.config     - linkedInConfig block from unified input
  * @param {string} [params.token]    - Optional Apify API token for child actor call
  * @returns {Promise<object[]>}
  */
 export async function runLinkedInJobsScraper({ query, location, config, token }) {
     const {
-        extraJobTitles = [],
-        extraLocations = [],
-        maxItemsPerQuery = 25,
-        company,
-        workplaceType,
-        employmentType,
+        totalJobs = 50,
         experienceLevel,
-        salary,
-        under10Applicants,
-        easyApply,
-        postedLimit,
-        sortBy = 'relevance',
-        industryIds,
-        geoIds,
-        startPage,
-        cookie,
-        userAgent,
-        proxy,
+        jobType,
+        remoteFilter,
+        timePosted = 'any',
+        companyIds,
+        includeDescription = true,
+        startOffset = 0,
+        maxConcurrency = 5,
     } = config;
-
-    // Merge shared query / location with any LinkedIn-specific extras
-    const jobTitles = [query, ...extraJobTitles].filter(Boolean);
-    const locations = [location, ...extraLocations].filter(Boolean);
 
     /** @type {Record<string, unknown>} */
     const actorInput = {
-        jobTitles,
-        ...(locations.length ? { locations } : {}),
-        maxItems: maxItemsPerQuery,
-        sortBy,
+        searchKeywords: query,
+        location: location || 'Worldwide',
+        totalJobs,
+        includeDescription,
+        startOffset,
+        maxConcurrency,
+        timePosted,
     };
 
-    // Optional filters — only include them if they were explicitly provided
-    if (company?.length)          actorInput.company          = company;
-    if (workplaceType?.length)    actorInput.workplaceType    = workplaceType;
-    if (employmentType?.length)   actorInput.employmentType   = employmentType;
-    if (experienceLevel?.length)  actorInput.experienceLevel  = experienceLevel;
-    if (salary?.length)           actorInput.salary           = salary;
-    if (under10Applicants)        actorInput.under10Applicants = under10Applicants;
-    if (easyApply)                actorInput.easyApply        = easyApply;
-    if (postedLimit)              actorInput.postedLimit      = postedLimit;
-    if (industryIds?.length)      actorInput.industryIds      = industryIds;
-    if (geoIds?.length)           actorInput.geoIds           = geoIds;
-    if (startPage != null)        actorInput.page             = startPage;
-    if (cookie)                   actorInput.cookie           = cookie;
-    if (userAgent)                actorInput.userAgent        = userAgent;
-    if (proxy)                    actorInput.proxy            = proxy;
+    // Optional filters — only include if explicitly provided
+    if (experienceLevel?.length)  actorInput.experienceLevel = experienceLevel;
+    if (jobType?.length)          actorInput.jobType         = jobType;
+    if (remoteFilter?.length)     actorInput.remoteFilter    = remoteFilter;
+    if (companyIds?.length)       actorInput.companyIds      = companyIds;
 
-    log.debug('LinkedIn Job Search input', { ...actorInput, cookie: cookie ? '[REDACTED]' : undefined });
+    log.debug('LinkedIn Jobs Scraper (jungle_thunder) input', actorInput);
 
     let run;
     try {
-        run = await Actor.call('harvestapi/linkedin-job-search', actorInput, token ? { token } : {});
+        run = await Actor.call(
+            'jungle_thunder/linkedin-jobs-scraper-free-trial',
+            actorInput,
+            token ? { token } : {},
+        );
     } catch (err) {
-        log.error('LinkedIn Job Search run failed', { error: err.message });
+        log.error('LinkedIn Jobs Scraper run failed', { error: err.message });
         return [];
     }
 
     if (!run?.defaultDatasetId) {
-        log.warning('LinkedIn Job Search returned no dataset ID.');
+        log.warning('LinkedIn Jobs Scraper returned no dataset ID.');
         return [];
     }
 

@@ -132,43 +132,58 @@ export function normaliseGoogle(raw, keepNormalised = true) {
     return normalised;
 }
 
-// ─── LinkedIn normaliser ──────────────────────────────────────────────────────
-
-/** Map LinkedIn workplace type codes to human-readable strings. */
-const WORKPLACE_MAP = { remote: 'Remote', hybrid: 'Hybrid', office: 'On-site' };
-
-/** Map LinkedIn employment type codes to human-readable strings. */
-const EMPLOYMENT_MAP = {
-    'full-time': 'Full-time',
-    'part-time': 'Part-time',
-    contract:    'Contract',
-    internship:  'Internship',
-    temporary:   'Temporary',
-};
-
-/** Map LinkedIn experience level codes to human-readable strings. */
-const EXPERIENCE_MAP = {
-    internship:   'Internship',
-    entry:        'Entry level',
-    associate:    'Associate',
-    'mid-senior': 'Mid-Senior level',
-    director:     'Director',
-    executive:    'Executive',
-};
+// ─── LinkedIn normaliser (jungle_thunder/linkedin-jobs-scraper-free-trial) ────
+//
+// This actor emits title-case enum values directly ("Full-time", "Remote",
+// "Mid-Senior") so no code→label mapping tables are needed.
+// Field reference based on the actor's README and typical output shape:
+//   title, company, companyLogo, location, salary, employmentType,
+//   seniorityLevel, remoteStatus, postedDate, applicants, description,
+//   descriptionHtml, industry, jobFunction, benefits, jobUrl, scrapedAt
 
 /**
- * @param {object}  raw            - Raw item from LinkedIn Job Search
- * @param {boolean} keepNormalised
+ * @param {object}  raw            - Raw item from jungle_thunder/linkedin-jobs-scraper-free-trial
+ * @param {boolean} keepNormalised - When false, preserve raw payload as _raw
  * @returns {object}               - NormalisedJob
  */
 export function normaliseLinkedIn(raw, keepNormalised = true) {
     const title    = clean(raw.title)   ?? '';
-    const company  = clean(raw.company?.name ?? raw.companyName ?? raw.company) ?? '';
-    const location = clean(raw.location) ?? '';
+    // Company can arrive as a string or as a nested object
+    const company  = clean(
+        typeof raw.company === 'object'
+            ? (raw.company?.name ?? raw.company?.companyName)
+            : (raw.company ?? raw.companyName),
+    ) ?? '';
+    const location = clean(raw.location ?? raw.jobLocation) ?? '';
 
-    const applyUrl      = clean(raw.applyUrl ?? raw.jobPostingUrl) ?? null;
-    const linkedInApply = clean(raw.linkedInApplyUrl ?? raw.linkedInJobUrl) ?? null;
-    const applyUrls     = [applyUrl, linkedInApply].filter(Boolean);
+    // Apply / job URL — this actor surfaces a direct jobUrl field
+    const jobUrl        = clean(raw.jobUrl ?? raw.url ?? raw.jobLink) ?? null;
+    const applyUrl      = clean(raw.applyUrl ?? raw.applicationUrl) ?? jobUrl;
+    const applyUrls     = [...new Set([applyUrl, jobUrl].filter(Boolean))];
+
+    // Salary — may come as a string or a structured object
+    let salary = null;
+    if (raw.salary) {
+        salary = typeof raw.salary === 'object'
+            ? clean(raw.salary?.text ?? raw.salary?.range ?? JSON.stringify(raw.salary))
+            : clean(raw.salary);
+    }
+
+    // Company logo
+    const companyLogoUrl = clean(
+        raw.companyLogo ?? raw.companyLogoUrl
+        ?? raw.company?.logo ?? raw.company?.logoUrl,
+    ) ?? null;
+
+    // Company URL / LinkedIn page
+    const companyUrl = clean(
+        raw.companyUrl ?? raw.company?.url ?? raw.company?.linkedInUrl,
+    ) ?? null;
+
+    // Company size — may be a number or string
+    const companySize = raw.companySize != null
+        ? clean(String(raw.companySize))
+        : (raw.company?.employeeCount != null ? clean(String(raw.company.employeeCount)) : null);
 
     const normalised = {
         title,
@@ -179,33 +194,33 @@ export function normaliseLinkedIn(raw, keepNormalised = true) {
         description:     clean(raw.description ?? raw.descriptionText) ?? null,
         descriptionHtml: clean(raw.descriptionHtml) ?? null,
         highlights: {
-            qualifications:   [],
-            responsibilities: [],
-            benefits:         [],
+            qualifications:   raw.qualifications   ?? [],
+            responsibilities: raw.responsibilities ?? [],
+            // This actor surfaces a benefits field directly
+            benefits:         Array.isArray(raw.benefits) ? raw.benefits : [],
         },
 
-        employmentType:  EMPLOYMENT_MAP[raw.employmentType] ?? clean(raw.employmentType) ?? null,
-        workplaceType:   WORKPLACE_MAP[raw.workplaceType]   ?? clean(raw.workplaceType)  ?? null,
-        experienceLevel: EXPERIENCE_MAP[raw.experienceLevel] ?? clean(raw.experienceLevel) ?? null,
-        salary:          clean(raw.salary ?? raw.salaryInfo) ?? null,
-        postedAt:        clean(raw.postedAt ?? raw.listedAt ?? raw.publishedAt) ?? null,
+        // This actor outputs title-case values natively; pass through as-is
+        employmentType:  clean(raw.employmentType ?? raw.jobType) ?? null,
+        workplaceType:   clean(raw.remoteStatus ?? raw.workplaceType ?? raw.remoteFilter) ?? null,
+        experienceLevel: clean(raw.seniorityLevel ?? raw.experienceLevel) ?? null,
+        salary,
+        postedAt:        clean(raw.postedDate ?? raw.postedAt ?? raw.listedAt ?? raw.publishedAt) ?? null,
 
         applyUrl,
         applyUrls,
-        linkedInApplyUrl: linkedInApply,
+        linkedInApplyUrl: jobUrl,
         easyApply:        raw.easyApply === true,
 
-        companyUrl:      clean(raw.company?.url ?? raw.companyUrl) ?? null,
-        companyLogoUrl:  clean(raw.company?.logoUrl ?? raw.companyLogoUrl) ?? null,
-        companySize:     clean(raw.company?.employeeCount ?? raw.companySize != null
-            ? String(raw.company?.employeeCount ?? raw.companySize)
-            : null) ?? null,
-        companyIndustry: clean(raw.company?.industry ?? raw.companyIndustry) ?? null,
+        companyUrl,
+        companyLogoUrl,
+        companySize,
+        companyIndustry: clean(raw.industry ?? raw.companyIndustry ?? raw.company?.industry) ?? null,
 
-        applicantCount: raw.applicantCount ?? raw.numApplicants ?? null,
+        applicantCount: raw.applicants ?? raw.applicantCount ?? raw.numApplicants ?? null,
         viewCount:      raw.viewCount ?? null,
 
-        jobId:         clean(raw.id ?? raw.jobId ?? raw.linkedInId) ?? null,
+        jobId:         clean(raw.id ?? raw.jobId ?? raw.linkedInJobId) ?? null,
         _source:       'linkedin',
         _sources:      ['linkedin'],
         _normalisedAt: ts(),
